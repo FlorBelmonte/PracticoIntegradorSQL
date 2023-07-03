@@ -102,3 +102,4 @@ select CalcularPromedioDePrecios() as PromedioDePrecios;
 --7. Transacciones:
 --● Crea una transacción que inserte un nuevo cliente y una nueva orden de compra al mismo tiempo.
 --● Asegúrate de que la transacción se ejecute correctamente y se haga un rollback en caso de error.
+
