@@ -103,3 +103,53 @@ select CalcularPromedioDePrecios() as PromedioDePrecios;
 --● Crea una transacción que inserte un nuevo cliente y una nueva orden de compra al mismo tiempo.
 --● Asegúrate de que la transacción se ejecute correctamente y se haga un rollback en caso de error.
 
+START TRANSACTION;
+
+SAVEPOINT savepoint_name;
+
+INSERT INTO Cliente (idCliente, nombre, email, direccion)
+VALUES (102, 'Joaquin', 'cliente@example.com', 'Dirección 1');
+
+INSERT INTO Compra (idCompra, idCliente, cantidad, fecha, idProducto)
+VALUES (107, 102, 5, '2023-07-05 19:30:00', 1);
+
+COMMIT;
+
+ROLLBACK TO SAVEPOINT savepoint_name;
+
+
+-- 8. Triggers:
+-- ● Crea un TRIGGER que actualice el stock de un producto después de realizar una orden de compra.
+-- ● Verifica que el TRIGGER se dispare correctamente y actualice el stock de manera adecuada.
+
+DELIMITER //
+
+CREATE TRIGGER verificacionStock BEFORE INSERT ON compra --Creo un trigger BEFORE para que verifique el stock del producto
+FOR EACH ROW
+BEGIN
+    DECLARE stockActual INT;
+    
+    SELECT stock INTO stockActual FROM Producto WHERE idProducto = NEW.idProducto;
+    
+    IF stockActual < NEW.cantidad THEN 
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No hay suficiente stock para realizar la compra.';
+    END IF;
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE TRIGGER actualizarStock AFTER INSERT ON Compra -- Creo un trigger AFTER para que me actualice el stock luego de una compra 
+FOR EACH ROW
+BEGIN
+    UPDATE Producto
+    SET stock = stock - NEW.cantidad
+    WHERE idProducto = NEW.idProducto;
+END //
+
+DELIMITER ;
+INSERT INTO Compra (idCompra, idCliente, cantidad, fecha, idProducto) 
+VALUES (124, 102, 1, '2023-07-05', 6);
+
+SELECT stock FROM Producto WHERE idProducto = 6;
